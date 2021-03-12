@@ -382,7 +382,7 @@ class EditIntWindow(sd.Dialog):
 
     def body(self, master):
         self.configure(background=GetBackground())
-        str = self.config_item['name'] + "  Max = " + self.config_item['max'] + "  Min = " + self.config_item['min']
+        str = f"{self.config_item['name']}  Max = {self.config_item['max']}  Min = {self.config_item['min']}"
         ttk.Label(self, text=str).pack()
         self.input = tk.Entry(self)
         self.input.pack(pady=4)
@@ -529,7 +529,7 @@ class ConfigurationWindow(tk.Toplevel):
                 if conf['name'] == config:
                     self.descriptionText.config(state=tk.NORMAL)
                     self.descriptionText.delete(1.0, tk.END)
-                    str = config + "\n" + conf['description']
+                    str = f"{config}\n{conf['description']}"
                     self.descriptionText.insert(1.0, str)
                     self.descriptionText.config(state=tk.DISABLED)
                     break
@@ -835,9 +835,9 @@ def ParseCommandLine():
 
 def GenerateMain(folder, projectName, features, cpp):
     if cpp:
-        filename = Path(folder) / (projectName + '.cpp')
+        filename = Path(folder) / f"{projectName}.cpp"
     else:
-        filename = Path(folder) / (projectName + '.c')
+        filename = Path(folder) / f"{projectName}.c"
 
     with open(filename, 'w') as file:
 
@@ -851,10 +851,10 @@ def GenerateMain(folder, projectName, features, cpp):
             # Add any includes
             for feat in features:
                 if feat in features_list:
-                    o = '#include "' + features_list[feat][H_FILE] + '"\n'
+                    o = f'#include \"{features_list[feat][H_FILE]}\"\n'
                     file.write(o)
                 if feat in stdlib_examples_list:
-                    o = '#include "' + stdlib_examples_list[feat][H_FILE] + '"\n'
+                    o = f'#include \"{stdlib_examples_list[feat][H_FILE]}\"\n'
                     file.write(o)
 
             file.write('\n')
@@ -879,7 +879,7 @@ def GenerateMain(folder, projectName, features, cpp):
             for feat in features:
                 if feat in code_fragments_per_feature:
                     for s in code_fragments_per_feature[feat][INITIALISERS]:
-                        main += (" " * indent)
+                        main += " " * indent
                         main += s
                         main += '\n'
                 main += '\n'
@@ -921,11 +921,11 @@ def GenerateCMake(folder, params):
         # seemingly a bit easier to handle than the backslashes
 
         p = str(params.sdkPath).replace('\\', '/')
-        p = '\"' + p + '\"'
+        p = f'\"{p}\"'
 
-        file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
+        file.write(f'set(PICO_SDK_PATH {p})\n\n')
         file.write(cmake_header2)
-        file.write('project(' + params.projectName + ' C CXX ASM)\n')
+        file.write(f'project({params.projectName} C CXX ASM)\n')
 
         if params.exceptions:
             file.write("\nset(PICO_CXX_ENABLE_EXCEPTIONS 1)\n")
@@ -943,49 +943,49 @@ def GenerateCMake(folder, params):
                     v = "1"
                 elif v == "False":
                     v = "0"
-                file.write('add_compile_definitions(' + c + '=' + v + ')\n')
+                file.write(f'add_compile_definitions({c}={v})\n')
             file.write('\n')
 
         # No GUI/command line to set a different executable name at this stage
         executableName = params.projectName
 
         if params.wantCPP:
-            file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp )\n\n')
+            file.write(f'add_executable({params.projectName} {params.projectName}.cpp )\n\n')
         else:
-            file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
+            file.write(f'add_executable({params.projectName} {params.projectName}.c )\n\n')
 
-        file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
-        file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
+        file.write(f'pico_set_program_name({params.projectName} \"{executableName}\")\n')
+        file.write(f'pico_set_program_version({params.projectName} \"0.1\")\n\n')
 
         if params.wantRunFromRAM:
             file.write('# no_flash means the target is to run from RAM\n')
-            file.write('pico_set_binary_type(' + params.projectName + ' no_flash)\n\n')
+            file.write(f'pico_set_binary_type({params.projectName} no_flash)\n\n')
 
         # Console output destinations
         if params.wantUART:
-            file.write('pico_enable_stdio_uart(' + params.projectName + ' 1)\n')
+            file.write(f'pico_enable_stdio_uart({params.projectName} 1)\n')
         else:
-            file.write('pico_enable_stdio_uart(' + params.projectName + ' 0)\n')
+            file.write(f'pico_enable_stdio_uart({params.projectName} 0)\n')
 
         if params.wantUSB:
-            file.write('pico_enable_stdio_usb(' + params.projectName + ' 1)\n\n')
+            file.write(f'pico_enable_stdio_usb({params.projectName} 1)\n\n')
         else:
-            file.write('pico_enable_stdio_usb(' + params.projectName + ' 0)\n\n')
+            file.write(f'pico_enable_stdio_usb({params.projectName} 0)\n\n')
 
         # Standard libraries
         file.write('# Add the standard library to the build\n')
-        file.write('target_link_libraries(' + params.projectName + ' ' + STANDARD_LIBRARIES + ')\n\n')
+        file.write(f'target_link_libraries({params.projectName} {STANDARD_LIBRARIES})\n\n')
 
         # Selected libraries/features
         if params.features:
             file.write('# Add any user requested libraries\n')
-            file.write('target_link_libraries(' + params.projectName + '\n')
+            file.write(f'target_link_libraries({params.projectName}\n')
             for feat in params.features:
                 if feat in features_list:
-                    file.write("        " + features_list[feat][LIB_NAME] + '\n')
+                    file.write(f"        {features_list[feat][LIB_NAME]}\n")
             file.write('        )\n\n')
 
-        file.write('pico_add_extra_outputs(' + params.projectName + ')\n\n')
+        file.write(f'pico_add_extra_outputs({params.projectName})\n\n')
 
 
 # Generates the requested project files, if any
@@ -1014,10 +1014,10 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '      "servertype": "openocd",\n'
                   '      "gdbPath": "gdb-multiarch",\n'
                   '      "device": "RP2040",\n'
-                  '      "configFiles": [\n' +
-                  '        "interface/' + deb + '",\n' +
-                  '        "target/rp2040.cfg"\n' +
-                  '        ],\n' +
+                  '      "configFiles": [\n' 
+                  f'        "interface/{deb}",\n' 
+                  '        "target/rp2040.cfg"\n' 
+                  '        ],\n' 
                   '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
                   '      "runToMain": true,\n'
                   '      // Give restart the same functionality as runToMain\n'
@@ -1175,10 +1175,10 @@ def DoEverything(parent, params):
 
     if isWindows:
         cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" ..'
-        makeCmd = 'nmake -j ' + str(cpus)
+        makeCmd = f'nmake -j {cpus}'
     else:
         cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
-        makeCmd = 'make -j' + str(cpus)
+        makeCmd = f'make -j{cpus}'
 
     if params.wantGUI:
         RunCommandInWindow(parent, cmakeCmd)
@@ -1216,7 +1216,7 @@ c = CheckPrerequisites()
 # TODO Do both warnings in the same error message so user does have to keep coming back to find still more to do
 
 if c == None:
-    m = 'Unable to find the `' + COMPILER_NAME + '` compiler\n'
+    m = f'Unable to find the `{COMPILER_NAME}` compiler\n'
     m += 'You will need to install an appropriate compiler to build a Raspberry Pi Pico project\n'
     m += 'See the Raspberry Pi Pico documentation for how to do this on your particular platform\n'
 
